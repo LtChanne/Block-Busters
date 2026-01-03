@@ -3,18 +3,20 @@ const gridSize = 9;
 const gridEl = document.getElementById("grid");
 let grid = [];
 
-// Score and level
+// Score, level, stars
 let score = 0;
 let level = 1;
+let stars = 0;
+
 const scoreEl = document.getElementById("score");
 const levelEl = document.getElementById("level");
+const starsEl = document.getElementById("stars");
 
 // Blocks container
 const blocksContainer = document.getElementById("blocks-container");
 
 // Restart button
-const restartBtn = document.getElementById("restart");
-restartBtn.onclick = () => location.reload();
+document.getElementById("restart").onclick = () => location.reload();
 
 // Initialize grid
 function createGrid() {
@@ -25,6 +27,10 @@ function createGrid() {
     for (let c = 0; c < gridSize; c++) {
       const cell = document.createElement("div");
       cell.classList.add("cell");
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+      cell.addEventListener("dragover", dragOverCell);
+      cell.addEventListener("drop", dropOnCell);
       gridEl.appendChild(cell);
       row.push(cell);
     }
@@ -41,6 +47,10 @@ const shapes = [
   [[0,1],[1,1]]              // reverse L
 ];
 
+// Current dragging block
+let draggingBlock = null;
+let draggingShape = null;
+
 // Generate blocks
 function generateBlocks() {
   blocksContainer.innerHTML = '';
@@ -48,9 +58,10 @@ function generateBlocks() {
     const shape = shapes[Math.floor(Math.random() * shapes.length)];
     const blockEl = document.createElement("div");
     blockEl.classList.add("block");
+    blockEl.setAttribute("draggable", true);
     
-    shape.forEach((row, r) => {
-      row.forEach((cell, c) => {
+    shape.forEach(row => {
+      row.forEach(cell => {
         const cellEl = document.createElement("div");
         cellEl.classList.add("block-cell");
         if (cell) cellEl.classList.add("filled");
@@ -58,53 +69,96 @@ function generateBlocks() {
       });
     });
 
-    // Click to place block
-    blockEl.onclick = () => placeBlock(shape);
+    // Drag events
+    blockEl.addEventListener("dragstart", () => {
+      draggingBlock = blockEl;
+      draggingShape = shape;
+      blockEl.classList.add("dragging");
+    });
+    blockEl.addEventListener("dragend", () => {
+      draggingBlock = null;
+      draggingShape = null;
+      blockEl.classList.remove("dragging");
+    });
+
     blocksContainer.appendChild(blockEl);
   }
 }
 
-// Place block
-function placeBlock(shape) {
-  outer:
-  for (let r = 0; r <= gridSize - shape.length; r++) {
-    for (let c = 0; c <= gridSize - shape[0].length; c++) {
-      if (canPlace(shape, r, c)) {
-        for (let i = 0; i < shape.length; i++) {
-          for (let j = 0; j < shape[i].length; j++) {
-            if (shape[i][j]) grid[r+i][c+j].classList.add("filled");
-          }
-        }
-        updateScore(10);
-        generateBlocks();
-        checkLines();
-        return;
-      }
-    }
+// Drag-over highlight
+function dragOverCell(e) {
+  e.preventDefault();
+  const row = parseInt(this.dataset.row);
+  const col = parseInt(this.dataset.col);
+
+  // Remove previous highlights
+  grid.flat().forEach(cell => cell.classList.remove("highlight"));
+
+  if (canPlace(draggingShape, row, col)) {
+    highlightCells(draggingShape, row, col);
   }
-  alert("No space for this block!");
 }
 
-// Can place block?
+// Drop block on grid
+function dropOnCell(e) {
+  const row = parseInt(this.dataset.row);
+  const col = parseInt(this.dataset.col);
+  if (!draggingShape) return;
+
+  if (canPlace(draggingShape, row, col)) {
+    placeBlock(draggingShape, row, col);
+    updateScore(10);
+    generateBlocks();
+    checkLines();
+  } else {
+    alert("Cannot place here!");
+  }
+
+  grid.flat().forEach(cell => cell.classList.remove("highlight"));
+}
+
+// Check placement
 function canPlace(shape, row, col) {
   for (let i = 0; i < shape.length; i++) {
     for (let j = 0; j < shape[i].length; j++) {
-      if (shape[i][j] && grid[row+i][col+j].classList.contains("filled")) {
-        return false;
+      if (shape[i][j]) {
+        if (row + i >= gridSize || col + j >= gridSize) return false;
+        if (grid[row+i][col+j].classList.contains("filled")) return false;
       }
     }
   }
   return true;
 }
 
-// Check full rows & columns
+// Highlight valid cells
+function highlightCells(shape, row, col) {
+  for (let i = 0; i < shape.length; i++) {
+    for (let j = 0; j < shape[i].length; j++) {
+      if (shape[i][j]) grid[row+i][col+j].classList.add("highlight");
+    }
+  }
+}
+
+// Place block
+function placeBlock(shape, row, col) {
+  for (let i = 0; i < shape.length; i++) {
+    for (let j = 0; j < shape[i].length; j++) {
+      if (shape[i][j]) grid[row+i][col+j].classList.add("filled");
+    }
+  }
+}
+
+// Clear full lines
 function checkLines() {
+  let linesCleared = 0;
+
   for (let r = 0; r < gridSize; r++) {
     if (grid[r].every(cell => cell.classList.contains("filled"))) {
       grid[r].forEach(cell => cell.classList.remove("filled"));
-      updateScore(50);
+      linesCleared++;
     }
   }
+
   for (let c = 0; c < gridSize; c++) {
     let full = true;
     for (let r = 0; r < gridSize; r++) {
@@ -112,8 +166,14 @@ function checkLines() {
     }
     if (full) {
       for (let r = 0; r < gridSize; r++) grid[r][c].classList.remove("filled");
-      updateScore(50);
+      linesCleared++;
     }
+  }
+
+  if (linesCleared > 0) {
+    updateScore(50 * linesCleared);
+    stars += linesCleared;
+    starsEl.textContent = `Stars: ${stars}`;
   }
 }
 
@@ -125,6 +185,6 @@ function updateScore(points) {
   levelEl.textContent = `Level: ${level}`;
 }
 
-// Init game
+// Initialize game
 createGrid();
 generateBlocks();
