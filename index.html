@@ -3,21 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Block Blast Home</title>
+  <title>Block Haven</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="game-container">
-    <h1>Block Blast Home</h1>
-    <div id="score-board">
-      <span id="score">Score: 0</span>
-      <span id="level">Level: 1</span>
-      <span id="stars">Stars: 0</span>
+    <h1>Block Haven</h1>
+
+    <div id="screens">
+      <!-- Game Screen -->
+      <div id="game-screen">
+        <div id="score-board">
+          <span id="score">Score: 0</span>
+          <span id="level">Level: 1</span>
+          <span id="stars">Stars: 0</span>
+        </div>
+        <div id="grid"></div>
+        <div id="blocks-container"></div>
+        <button id="go-home">Go to Home</button>
+        <button id="restart">Restart Game</button>
+      </div>
+
+      <!-- Home Screen -->
+      <div id="home-screen" style="display:none;">
+        <h2>Your Home</h2>
+        <div id="home-grid"></div>
+        <div id="shop">
+          <h3>Shop (Spend Stars)</h3>
+          <div class="shop-item" data-item="plant" data-cost="1">🌱 Plant - 1 Star</div>
+          <div class="shop-item" data-item="sofa" data-cost="3">🛋 Sofa - 3 Stars</div>
+          <div class="shop-item" data-item="lamp" data-cost="2">💡 Lamp - 2 Stars</div>
+        </div>
+        <button id="back-game">Back to Game</button>
+      </div>
     </div>
-    <div id="grid"></div>
-    <div id="blocks-container"></div>
-    <button id="restart">Restart Game</button>
   </div>
   <script src="game.js"></script>
+  <script src="home.js"></script>
 </body>
 </html>
