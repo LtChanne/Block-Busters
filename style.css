@@ -43,11 +43,16 @@ h1 {
   height: 35px;
   background: #e0e0e0;
   border-radius: 4px;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.2s;
 }
 
 .cell.filled {
   background: #4CAF50;
+  transform: scale(1.1);
+}
+
+.cell.highlight {
+  background: #90ee90;
 }
 
 #blocks-container {
@@ -63,11 +68,15 @@ h1 {
   grid-template-columns: repeat(3, 20px);
   grid-template-rows: repeat(3, 20px);
   gap: 2px;
-  cursor: pointer;
   border: 2px solid #4CAF50;
   padding: 5px;
   border-radius: 4px;
   background: #fff;
+  cursor: grab;
+}
+
+.block.dragging {
+  opacity: 0.6;
 }
 
 .block-cell {
